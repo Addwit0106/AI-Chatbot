@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Local AI Chatbot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <div class="chat-container">
+
+        <div class="chat-header">
+            🤖 My Local AI Assistant
+        </div>
+
+        <div id="chat-box"></div>
+
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="Ask anything...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+
+    </div>
+
+<script>
+
+   async function sendMessage() {
+
+    let input = document.getElementById("user-input");
+    let message = input.value;
+
+    if(message.trim() === "") return;
+
+    let chatBox = document.getElementById("chat-box");
+
+    // User Message
+    chatBox.innerHTML += `
+        <div class="user-msg">
+            ${message}
+        </div>
+    `;
+
+    input.value = "";
+
+    // Loading Animation
+    let loadingDiv = document.createElement("div");
+
+    loadingDiv.className = "ai-msg";
+
+    loadingDiv.id = "loading";
+
+    loadingDiv.innerHTML = `
+        <div class="loading">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    `;
+
+    chatBox.appendChild(loadingDiv);
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    // Fetch Streaming Response
+    const response = await fetch("/chat", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({message: message})
+    });
+
+    const reader = response.body.getReader();
+
+    const decoder = new TextDecoder();
+
+    // AI Message Container
+    let aiDiv = document.createElement("div");
+
+    aiDiv.className = "ai-msg";
+
+    let firstChunk = true;
+
+    while (true) {
+
+        const { done, value } = await reader.read();
+
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+
+        // Remove loading only when first text arrives
+        if(firstChunk) {
+
+            document.getElementById("loading").remove();
+
+            chatBox.appendChild(aiDiv);
+
+            firstChunk = false;
+        }
+
+        aiDiv.innerHTML += chunk;
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+}
+
+</script>
+
+</body>
