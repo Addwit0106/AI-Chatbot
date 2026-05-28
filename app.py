@@ -1,12 +1,12 @@
-from flask import Flask, render_template, request, Response
+
+from flask import Flask, render_template, request
 import requests
-import json
 
 app = Flask(__name__)
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
-# Conversation memory
+# Memory
 conversation_history = []
 
 
@@ -20,41 +20,23 @@ def chat():
 
     user_message = request.json["message"]
 
-    # Store user message
-    conversation_history.append({
-        "role": "user",
-        "content": user_message
-    })
+    # Save user message
+    conversation_history.append(f"User: {user_message}")
 
-    # Keep only recent messages
-    recent_history = conversation_history[-6:]
+    # Small memory
+    recent_history = conversation_history[-4:]
 
-    # Format conversation properly
-    formatted_history = ""
-
-    for msg in recent_history:
-
-        if msg["role"] == "user":
-            formatted_history += f"User: {msg['content']}\n"
-
-        else:
-            formatted_history += f"Assistant: {msg['content']}\n"
-
-    # System Prompt
+    # Prompt
     full_prompt = f"""
-You are a simple and helpful AI assistant.
+You are a helpful AI assistant.
 
 Rules:
-- Give direct answers only.
-- Keep responses short unless user asks for details.
-- Do not generate unrelated information.
-- Do not continue old topics.
-- Respond naturally like a chatbot.
-- If user says "hi" or "hello", greet briefly.
-- Do not create long explanations unless requested.
+- Keep answers short and clear
+- Be conversational
+- Avoid unrelated information
 
 Conversation:
-{formatted_history}
+{chr(10).join(recent_history)}
 
 Assistant:
 """
@@ -62,45 +44,32 @@ Assistant:
     data = {
         "model": "phi3",
         "prompt": full_prompt,
-        "stream": True,
-        "options": {
-            "temperature": 0.3,
-            "num_predict": 120,
-            "top_p": 0.9
-        }
+        "stream": False
     }
 
-    def generate():
-
-        full_response = ""
+    try:
 
         response = requests.post(
             OLLAMA_URL,
             json=data,
-            stream=True
+            timeout=60
         )
 
-        for line in response.iter_lines():
+        response_json = response.json()
 
-            if line:
+        ai_response = response_json.get(
+            "response",
+            "No response from AI."
+        )
 
-                json_data = json.loads(line)
+    except Exception as e:
 
-                if "response" in json_data:
+        ai_response = "AI is busy or not responding."
 
-                    chunk = json_data["response"]
+    # Save AI response
+    conversation_history.append(f"Assistant: {ai_response}")
 
-                    full_response += chunk
-
-                    yield chunk
-
-        # Store assistant response
-        conversation_history.append({
-            "role": "assistant",
-            "content": full_response
-        })
-
-    return Response(generate(), mimetype='text/plain')
+    return ai_response
 
 
 if __name__ == "__main__":

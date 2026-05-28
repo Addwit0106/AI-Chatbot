@@ -1,116 +1,120 @@
+
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Local AI Chatbot</title>
+
+    <title>My AI</title>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
 </head>
+
 <body>
 
     <div class="chat-container">
 
-        <div class="chat-header">
-            🤖 My Local AI Assistant
-        </div>
+        <h1>🤖 My AI</h1>
 
         <div id="chat-box"></div>
 
         <div class="input-area">
-            <input type="text" id="user-input" placeholder="Ask anything..." onkeydown="handleKey(event)">
-            <button onclick="sendMessage()">Send</button>
+
+            <input
+                type="text"
+                id="user-input"
+                placeholder="Ask anything..."
+            >
+
+            <button onclick="sendMessage()">
+                Send
+            </button>
+
         </div>
 
     </div>
 
+
 <script>
 
-    function handleKey(event) {
-
-    if(event.key === "Enter") {
-        sendMessage();
-    }
-}
-
-   async function sendMessage() {
+async function sendMessage() {
 
     let input = document.getElementById("user-input");
+
     let message = input.value;
 
     if(message.trim() === "") return;
 
     let chatBox = document.getElementById("chat-box");
 
-    // User Message
-    chatBox.innerHTML += `
-        <div class="user-msg">
-            ${message}
-        </div>
-    `;
+    // USER MESSAGE
+    let userDiv = document.createElement("div");
+
+    userDiv.className = "user-message";
+
+    userDiv.textContent = message;
+
+    chatBox.appendChild(userDiv);
 
     input.value = "";
 
-    // Loading Animation
-    let loadingDiv = document.createElement("div");
+    // AI MESSAGE
+    let aiDiv = document.createElement("div");
 
-    loadingDiv.className = "ai-msg";
+    aiDiv.className = "ai-message";
 
-    loadingDiv.id = "loading";
+    aiDiv.textContent = "Thinking...";
 
-    loadingDiv.innerHTML = `
-        <div class="loading">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-    `;
-
-    chatBox.appendChild(loadingDiv);
+    chatBox.appendChild(aiDiv);
 
     chatBox.scrollTop = chatBox.scrollHeight;
 
-    // Fetch Streaming Response
-    const response = await fetch("/chat", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({message: message})
-    });
+    try {
 
-    const reader = response.body.getReader();
+        let response = await fetch("/chat", {
 
-    const decoder = new TextDecoder();
+            method: "POST",
 
-    // AI Message Container
-    let aiDiv = document.createElement("div");
+            headers: {
+                "Content-Type": "application/json"
+            },
 
-    aiDiv.className = "ai-msg";
+            body: JSON.stringify({
+                message: message
+            })
 
-    let firstChunk = true;
+        });
 
-    while (true) {
+        let data = await response.text();
 
-        const { done, value } = await reader.read();
+        aiDiv.textContent = data;
 
-        if (done) break;
-
-        const chunk = decoder.decode(value);
-
-        // Remove loading only when first text arrives
-        if(firstChunk) {
-
-            document.getElementById("loading").remove();
-
-            chatBox.appendChild(aiDiv);
-
-            firstChunk = false;
-        }
-
-        aiDiv.innerHTML += chunk;
-
-        chatBox.scrollTop = chatBox.scrollHeight;
     }
+
+    catch(error) {
+
+        aiDiv.textContent = "Error connecting to AI.";
+
+    }
+
+    chatBox.scrollTop = chatBox.scrollHeight;
 }
+
+
+// ENTER BUTTON SUPPORT
+document.getElementById("user-input")
+.addEventListener("keypress", function(event) {
+
+    if(event.key === "Enter") {
+
+        sendMessage();
+
+    }
+
+});
 
 </script>
 
 </body>
+</html>
+
