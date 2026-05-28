@@ -15,13 +15,20 @@
         <div id="chat-box"></div>
 
         <div class="input-area">
-            <input type="text" id="user-input" placeholder="Ask anything...">
+            <input type="text" id="user-input" placeholder="Ask anything..." onkeydown="handleKey(event)">
             <button onclick="sendMessage()">Send</button>
         </div>
 
     </div>
 
 <script>
+
+    function handleKey(event) {
+
+    if(event.key === "Enter") {
+        sendMessage();
+    }
+}
 
    async function sendMessage() {
 
