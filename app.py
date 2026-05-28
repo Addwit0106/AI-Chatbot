@@ -44,7 +44,11 @@ Assistant:
     data = {
         "model": "phi3",
         "prompt": full_prompt,
-        "stream": False
+        "stream": False,
+        
+        "options": {
+        "num_predict": 200
+        }
     }
 
     try:
@@ -52,7 +56,7 @@ Assistant:
         response = requests.post(
             OLLAMA_URL,
             json=data,
-            timeout=60
+            timeout=180
         )
 
         response_json = response.json()
