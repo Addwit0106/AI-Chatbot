@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
-# Memory
+
 conversation_history = []
 
 
@@ -20,13 +20,12 @@ def chat():
 
     user_message = request.json["message"]
 
-    # Save user message
     conversation_history.append(f"User: {user_message}")
 
-    # Small memory
+
     recent_history = conversation_history[-4:]
 
-    # Prompt
+
     full_prompt = f"""
 You are a helpful AI assistant.
 
@@ -70,7 +69,7 @@ Assistant:
 
         ai_response = "AI is busy or not responding."
 
-    # Save AI response
+
     conversation_history.append(f"Assistant: {ai_response}")
 
     return ai_response
