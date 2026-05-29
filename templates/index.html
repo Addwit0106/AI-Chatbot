@@ -12,167 +12,75 @@
 
 <body>
 
-    <div class="chat-container">
 
-        <h1>🤖 My AI</h1>
+    <div id="welcome-screen">
 
-        <div id="chat-box"></div>
+        <div class="welcome-content">
 
-       
-<div class="input-area">
+            <h1>✨ Personal AI</h1>
 
-    <input
-        type="file"
-        id="pdf-file"
-        accept=".pdf"
-    >
+            <p>
+                What's on your mind today?
+            </p>
 
-    <input
-        type="text"
-        id="user-input"
-        placeholder="Ask anything..."
-    >
+            <div class="suggestions">
 
-    <button onclick="uploadPDF()">
-        Upload PDF
-    </button>
+                <div class="suggestion-card">
+                    📚 Summarize Notes
+                </div>
 
-    <button onclick="sendMessage()">
-        Send
-    </button>
+                <div class="suggestion-card">
+                    💻 Generate Code
+                </div>
 
-</div>
+                <div class="suggestion-card">
+                    📝 Explain Concepts
+                </div>
 
+                <div class="suggestion-card">
+                    🎯 Create Study Notes
+                </div>
+
+            </div>
+
+        </div>
 
     </div>
 
+ 
 
-<script>
+    <div class="chat-container">
+
+        <div id="chat-box"></div>
+
+        <div class="input-area">
+
+            <input
+                type="file"
+                id="pdf-file"
+                accept=".pdf"
+            >
+
+            <input
+                type="text"
+                id="user-input"
+                placeholder="Ask anything..."
+            >
+
+            <button onclick="uploadPDF()">
+                Upload PDF
+            </button>
+
+            <button onclick="sendMessage()">
+                Send
+            </button>
+
+        </div>
+
+    </div>
 
     
-async function uploadPDF() {
-
-    let fileInput = document.getElementById("pdf-file");
-
-    if(fileInput.files.length === 0) {
-
-        alert("Please select a PDF first.");
-        return;
-
-    }
-
-    let formData = new FormData();
-
-    formData.append(
-        "pdf",
-        fileInput.files[0]
-    );
-
-    let response = await fetch(
-        "/upload-pdf",
-        {
-            method: "POST",
-            body: formData
-        }
-    );
-
-    let result = await response.text();
-
-    alert(result);
-}
-
-
-async function sendMessage() {
-
-    let input = document.getElementById("user-input");
-
-    let message = input.value;
-
-    if(message.trim() === "") return;
-
-    let chatBox = document.getElementById("chat-box");
-
-
-    let userDiv = document.createElement("div");
-
-    userDiv.className = "user-message";
-
-    userDiv.textContent = message;
-
-    chatBox.appendChild(userDiv);
-
-    input.value = "";
-
-
-    let aiDiv = document.createElement("div");
-
-    aiDiv.className = "ai-message";
-
-    let dots = 0;
-
-let loading = setInterval(() => {
-
-    dots++;
-
-    if(dots > 3) dots = 1;
-
-    aiDiv.textContent = "Thinking" + ".".repeat(dots);
-
-}, 500);
-
-    chatBox.appendChild(aiDiv);
-
-    chatBox.scrollTop = chatBox.scrollHeight;
-
-    try {
-
-        let response = await fetch("/chat", {
-
-            method: "POST",
-
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({
-                message: message
-            })
-
-        });
-
-       let data = await response.text();
-
-clearInterval(loading);
-
-aiDiv.textContent = data;
-
-    }
-
-    catch(error) {
-
-    clearInterval(loading);
-
-    aiDiv.textContent = "Error connecting to AI.";
-
-}
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-
-
-document.getElementById("user-input")
-.addEventListener("keypress", function(event) {
-
-    if(event.key === "Enter") {
-
-        sendMessage();
-
-    }
-
-});
-
-</script>
-
+<script src="{{ url_for('static', filename='script.js') }}"></script>   
 </body>
 </html>
 

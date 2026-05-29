@@ -8,8 +8,10 @@ app = Flask(__name__)
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
-# Chat Memory
+# Memory
 conversation_history = []
+pdf_text = ""
+pdf_chunks = []
 
 
 @app.route("/")
@@ -20,23 +22,40 @@ def home():
 @app.route("/chat", methods=["POST"])
 def chat():
 
+    global pdf_text
+    global pdf_chunks
+
     user_message = request.json["message"]
 
-    # Save user message
     conversation_history.append(
         f"User: {user_message}"
     )
 
-    # Keep last few messages
     recent_history = conversation_history[-4:]
+
+    # Find relevant PDF chunk
+    relevant_text = ""
+
+    for chunk in pdf_chunks:
+
+        if any(
+            word.lower() in chunk.lower()
+            for word in user_message.split()
+        ):
+            relevant_text = chunk[:1000]
+            break
 
     full_prompt = f"""
 You are a helpful AI assistant.
 
 Rules:
-- Keep answers short and clear
-- Be conversational
-- Avoid unrelated information
+- Answer greetings normally.
+- If the question is about the uploaded PDF, use the PDF content.
+- Keep answers short and clear.
+- Be conversational.
+
+Relevant PDF Content:
+{relevant_text}
 
 Conversation:
 {chr(10).join(recent_history)}
@@ -49,7 +68,7 @@ Assistant:
         "prompt": full_prompt,
         "stream": False,
         "options": {
-            "num_predict": 200
+            "num_predict": 150
         }
     }
 
@@ -68,11 +87,10 @@ Assistant:
             "No response from AI."
         )
 
-    except Exception:
+    except Exception as e:
 
-        ai_response = "AI is busy or not responding."
+        ai_response = f"Error: {str(e)}"
 
-    # Save AI response
     conversation_history.append(
         f"Assistant: {ai_response}"
     )
@@ -82,6 +100,9 @@ Assistant:
 
 @app.route("/upload-pdf", methods=["POST"])
 def upload_pdf():
+
+    global pdf_text
+    global pdf_chunks
 
     if "pdf" not in request.files:
         return "No PDF uploaded."
@@ -107,9 +128,20 @@ def upload_pdf():
 
     reader = PdfReader(filepath)
 
-    total_pages = len(
-        reader.pages
-    )
+    total_pages = len(reader.pages)
+
+    pdf_text = ""
+    pdf_chunks = []
+
+    for page in reader.pages:
+
+        text = page.extract_text()
+
+        if text:
+
+            pdf_text += text + "\n"
+
+            pdf_chunks.append(text)
 
     return f"PDF uploaded successfully! Pages: {total_pages}"
 

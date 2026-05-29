@@ -203,3 +203,72 @@ button:hover {
 
     border-radius: 10px;
 }
+
+
+#welcome-screen {
+
+    text-align: center;
+
+    padding: 60px 20px 30px 20px;
+}
+
+#welcome-screen h1 {
+
+    font-size: 48px;
+
+    margin-bottom: 15px;
+
+    background: linear-gradient(
+        90deg,
+        #8b5cf6,
+        #06b6d4
+    );
+
+    -webkit-background-clip: text;
+
+    -webkit-text-fill-color: transparent;
+}
+
+#welcome-screen p {
+
+    color: #94a3b8;
+
+    font-size: 18px;
+
+    margin-bottom: 40px;
+}
+
+.suggestions {
+
+    display: grid;
+
+    grid-template-columns: repeat(2, 1fr);
+
+    gap: 15px;
+
+    max-width: 700px;
+
+    margin: auto;
+}
+
+.suggestion-card {
+
+    background: #111827;
+
+    padding: 20px;
+
+    border-radius: 16px;
+
+    cursor: pointer;
+
+    transition: 0.3s;
+
+    border: 1px solid #334155;
+}
+
+.suggestion-card:hover {
+
+    transform: translateY(-5px);
+
+    border-color: #8b5cf6;
+}

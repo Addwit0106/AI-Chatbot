@@ -1,0 +1,123 @@
+
+async function uploadPDF() {
+
+    let fileInput = document.getElementById("pdf-file");
+
+    if(fileInput.files.length === 0) {
+
+        alert("Please select a PDF first.");
+        return;
+
+    }
+
+    let formData = new FormData();
+
+    formData.append(
+        "pdf",
+        fileInput.files[0]
+    );
+
+    let response = await fetch(
+        "/upload-pdf",
+        {
+            method: "POST",
+            body: formData
+        }
+    );
+
+    let result = await response.text();
+
+    alert(result);
+}
+
+
+async function sendMessage() {
+
+    let input = document.getElementById("user-input");
+
+    let message = input.value;
+
+    if(message.trim() === "") return;
+
+    let chatBox = document.getElementById("chat-box");
+
+
+    let userDiv = document.createElement("div");
+
+    userDiv.className = "user-message";
+
+    userDiv.textContent = message;
+
+    chatBox.appendChild(userDiv);
+
+    input.value = "";
+
+
+    let aiDiv = document.createElement("div");
+
+    aiDiv.className = "ai-message";
+
+    let dots = 0;
+
+let loading = setInterval(() => {
+
+    dots++;
+
+    if(dots > 3) dots = 1;
+
+    aiDiv.textContent = "Thinking" + ".".repeat(dots);
+
+}, 500);
+
+    chatBox.appendChild(aiDiv);
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    try {
+
+        let response = await fetch("/chat", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                message: message
+            })
+
+        });
+
+       let data = await response.text();
+
+clearInterval(loading);
+
+aiDiv.textContent = data;
+
+    }
+
+    catch(error) {
+
+    clearInterval(loading);
+
+    aiDiv.textContent = "Error connecting to AI.";
+
+}
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+
+
+document.getElementById("user-input")
+.addEventListener("keypress", function(event) {
+
+    if(event.key === "Enter") {
+
+        sendMessage();
+
+    }
+
+});
+
+console.log("Script Loaded Successfully");
