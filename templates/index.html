@@ -18,24 +18,69 @@
 
         <div id="chat-box"></div>
 
-        <div class="input-area">
+       
+<div class="input-area">
 
-            <input
-                type="text"
-                id="user-input"
-                placeholder="Ask anything..."
-            >
+    <input
+        type="file"
+        id="pdf-file"
+        accept=".pdf"
+    >
 
-            <button onclick="sendMessage()">
-                Send
-            </button>
+    <input
+        type="text"
+        id="user-input"
+        placeholder="Ask anything..."
+    >
 
-        </div>
+    <button onclick="uploadPDF()">
+        Upload PDF
+    </button>
+
+    <button onclick="sendMessage()">
+        Send
+    </button>
+
+</div>
+
 
     </div>
 
 
 <script>
+
+    
+async function uploadPDF() {
+
+    let fileInput = document.getElementById("pdf-file");
+
+    if(fileInput.files.length === 0) {
+
+        alert("Please select a PDF first.");
+        return;
+
+    }
+
+    let formData = new FormData();
+
+    formData.append(
+        "pdf",
+        fileInput.files[0]
+    );
+
+    let response = await fetch(
+        "/upload-pdf",
+        {
+            method: "POST",
+            body: formData
+        }
+    );
+
+    let result = await response.text();
+
+    alert(result);
+}
+
 
 async function sendMessage() {
 
@@ -63,7 +108,17 @@ async function sendMessage() {
 
     aiDiv.className = "ai-message";
 
-    aiDiv.textContent = "Thinking...";
+    let dots = 0;
+
+let loading = setInterval(() => {
+
+    dots++;
+
+    if(dots > 3) dots = 1;
+
+    aiDiv.textContent = "Thinking" + ".".repeat(dots);
+
+}, 500);
 
     chatBox.appendChild(aiDiv);
 
@@ -85,18 +140,21 @@ async function sendMessage() {
 
         });
 
-        let data = await response.text();
+       let data = await response.text();
 
-        aiDiv.textContent = data;
+clearInterval(loading);
+
+aiDiv.textContent = data;
 
     }
 
     catch(error) {
 
-        aiDiv.textContent = "Error connecting to AI.";
+    clearInterval(loading);
 
-    }
+    aiDiv.textContent = "Error connecting to AI.";
 
+}
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
